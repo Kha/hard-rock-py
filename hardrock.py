@@ -1,9 +1,10 @@
 import socket
 import json
 import sys
+import os
 
 class Client:
-    HOST = '192.168.0.107'
+    HOST = os.environ.get('HRR_HOST', '127.0.0.1')
     PORT = 1993
     BUF_SIZE = 100
 
