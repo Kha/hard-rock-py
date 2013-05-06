@@ -2,6 +2,10 @@ import socket
 import json
 import sys
 import os
+import functools
+
+from Vec2d import Vec2d
+v = Vec2d
 
 class Client:
     HOST = os.environ.get('HRR_HOST', '127.0.0.1')
@@ -35,21 +39,80 @@ class Observer(Client):
     def connect(self):
         super().connect({"message":"connect", "type":"observer"})
 
+class Direction:
+    UP = v(0, -1)
+    RIGHT = v(1, 0)
+    DOWN = v(0, 1)
+    LEFT = v(-1, 0)
+
+    assert(UP.perpendicular() == RIGHT)
+
+class Tile:
+    SEGMENT_SIZE = 45
+    TRACK_WIDTH = 5 * SEGMENT_SIZE
+
+    def __init__(self, pos, dir_in):
+        self.pos = pos
+        self.dir_in = dir_in
+
+    @staticmethod
+    def create(type, pos, dir_in):
+        return {"straight": StraightTile, "finish": FinishTile,
+                "turnleft": functools.partial(TurnTile, TurnTile.LEFT),
+                "turnright": functools.partial(TurnTile, TurnTile.RIGHT)
+               }[type](pos, dir_in)
+
+class StraightTile(Tile):
+    @property
+    def dir_out(self): return self.dir_in
+
+    @property
+    def size(self):
+        diag = v(Tile.SEGMENT_SIZE, Tile.TRACK_WIDTH) * self.dir_in
+        return v(abs(diag.x), abs(diag.y))
+
+class TurnTile(Tile):
+    LEFT = object()
+    RIGHT = object()
+
+    def __init__(self, type, pos, dir_in):
+        super().__init__(pos, dir_in)
+        self.type = type
+
+    @property
+    def dir_out(self):
+        out = self.dir_in.perpendicular()
+        if type == TurnTile.LEFT: out = -out
+        return out
+
+    @property
+    def size(self):
+        return v(6 * Tile.TRACK_WIDTH, 6 * Tile.TRACK_WIDTH)
+
+class FinishTile(StraightTile): pass
+
 class Track:
     def __init__(self, msg):
         assert(msg['message'] == "track")
         self.width = msg['width']
         self.height = msg['height']
-        self.startdir = msg['startdir']
-        self.data = [[msg['data'][x + self.width * y] for x in range(self.width)] for y in range(self.height)]
+        self.startdir = getattr(Direction, msg['startdir'])
+        if msg['tiled']:
+            self.tiles = []
+            dir_in = self.startdir
+            for [type, x, y] in msg['tiles']:
+                self.tiles.append(Tile.create(type, v(x, y), dir_in))
+                dir_in = self.tiles[-1].dir_out
+        else:
+            self.data = [[msg['data'][x + self.width * y] for x in range(self.width)] for y in range(self.height)]
 
 class Player(Client):
     def __init__(self, name):
         super().__init__()
         self._name = name
 
-    def connect(self, character, cartype):
-        super().connect({"message":"connect", "type":"player", "name":self._name, "character":character, "cartype":cartype, "tracktiled":False})
+    def connect(self, character, cartype, tracktiled=True):
+        super().connect({"message":"connect", "type":"player", "name":self._name, "character":character, "cartype":cartype, "tracktiled":tracktiled})
         while True:
             self.dispatch()
 
