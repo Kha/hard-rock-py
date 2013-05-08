@@ -106,6 +106,18 @@ class Track:
         else:
             self.data = [[msg['data'][x + self.width * y] for x in range(self.width)] for y in range(self.height)]
 
+class Car:
+    def __init__(self, msg):
+        self.__dict__ = msg
+
+    @property
+    def facing_v(self):
+        return v.from_polar(1, self.facing)
+
+    @property
+    def pos(self):
+        return v(self.locationX, self.locationY)
+
 class Player(Client):
     def __init__(self, name):
         super().__init__()
@@ -140,7 +152,11 @@ class Player(Client):
 
     def gamestate(self, time, cars, missiles, mines):
         self.time = time
-        self.cars = cars
+        self.cars = [Car(msg) for msg in cars]
+        for c in self.cars:
+            if c.driver == self._name:
+                self.car = c
+
         self.missiles = missiles
         self.mines = mines
         self.tick()

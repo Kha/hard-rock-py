@@ -15,7 +15,13 @@ class Vec2d(object):
         else:
             self.x = x_or_pair
             self.y = y
- 
+
+    @staticmethod
+    def from_polar(radius, angle):
+        v = Vec2d(radius, 0)
+        v.angle = angle
+        return v
+
     def __len__(self):
         return 2
  
@@ -242,7 +248,7 @@ class Vec2d(object):
     length = property(get_length, __setlength, None, "gets or sets the magnitude of the vector")
  
     def rotate(self, angle_degrees):
-        radians = math.radians(angle_degrees)
+        radians = angle_degrees
         cos = math.cos(radians)
         sin = math.sin(radians)
         x = self.x*cos - self.y*sin
@@ -323,3 +329,6 @@ class Vec2d(object):
  
     def __setstate__(self, dict):
         self.x, self.y = dict
+
+    def is_right(self, right):
+        return self.get_angle_between(right) > 0
