@@ -134,9 +134,10 @@ class Player(Client):
         del obj['message']
 
         try:
-            getattr(self, message)(**obj)
+            handler = getattr(self, message)
         except AttributeError:
             print("WARN: unhandled message {}".format(message))
+        handler(**obj)
 
     def do(self, action):
         self.send({"message":"action", "type":action})
