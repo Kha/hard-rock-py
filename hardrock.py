@@ -68,7 +68,7 @@ class StraightTile(Tile):
 
     @property
     def size(self):
-        diag = v(Tile.SEGMENT_SIZE, Tile.TRACK_WIDTH) * self.dir_in
+        diag = v(3 * Tile.SEGMENT_SIZE, Tile.TRACK_WIDTH) * self.dir_in
         return v(abs(diag.x), abs(diag.y))
 
 class TurnTile(Tile):
