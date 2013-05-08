@@ -62,6 +62,14 @@ class Tile:
                 "turnright": functools.partial(TurnTile, TurnTile.RIGHT)
                }[type](pos, dir_in)
 
+    @property
+    def mid(self):
+        return self.pos + 0.5 * self.size
+
+    @property
+    def exit_mid(self):
+        return self.mid + 0.5 * v(self.dir_out.x * self.size.x, self.dir_out.y * self.size.y)
+
 class StraightTile(Tile):
     @property
     def dir_out(self): return self.dir_in
@@ -137,6 +145,8 @@ class Player(Client):
             handler = getattr(self, message)
         except AttributeError:
             print("WARN: unhandled message {}".format(message))
+            return
+
         handler(**obj)
 
     def do(self, action):
