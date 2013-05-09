@@ -90,7 +90,7 @@ class TurnTile(Tile):
     @property
     def dir_out(self):
         out = self.dir_in.perpendicular()
-        if type == TurnTile.LEFT: out = -out
+        if self.type == TurnTile.LEFT: out = -out
         return out
 
     @property
